@@ -14,7 +14,7 @@ A fast, lightweight Moodle LMS security scanner written in Go.
 Requires Go 1.21+.
 
 ```bash
-git clone https://github.com/d6fault/moodlescan.git
+git clone https://github.com/d6fault/moodleprobe.git
 cd moodlescan
 go build -o moodlescan
 ```
@@ -22,6 +22,6 @@ go build -o moodlescan
 ## Usage
 
 ```bash
-$ ./moodlescan scan --url https://example.com
+$ ./moodleprobe scan --url https://example.com
 ```
 
