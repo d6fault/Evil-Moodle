@@ -36,6 +36,10 @@ cd Evil-Moodle
 go build -o evilmoodle
 ```
 
+### Wordlist
+
+For Plugin probing it will be regularly updated for new moodle plugins when they get added. The wordlist is located at ![Wordlist](https://github.com/d6fault/Evil-Moodle/blob/main/plugins.txt)
+
 ## Usage
 
 ```bash
