@@ -40,10 +40,38 @@ go build -o evilmoodle
 
 ## Usage
 
-Run a quick security audit against a target Moodle instance using the `scan` command:
-
 ```bash
-./evilmoodle --url https://example.com
+./evilmoodle -h
+Evil Moodle is a CLI tool for reconnaissance and security scanning of Moodle LMS instances.
+
+It fingerprints the target, and enumerates installed
+plugins via probing using a configurable wordlist.
+
+Usage:
+  evilmoodle --url <target> [flags]
+
+Examples:
+  evilmoodle --url https://moodle.example.com
+  evilmoodle --url moodle.example.com --wordlist plugins.txt -v
+  evilmoodle --url https://example.com --wordlist plugins.txt --rate 10 --delay 100
+
+Flags:
+      --url string        Moodle URL (required)
+      --wordlist string   Path to plugins wordlist
+  -v, --verbose           Verbose output
+  -r, --rate int          Rate limit in requests per second (0 = unlimited)
+  -d, --delay int         Delay between requests in milliseconds (default 0)
+
+Usage:
+  evilmoodle [flags]
+
+Flags:
+  -d, --delay int         Delay between requests in milliseconds
+  -h, --help              help for evilmoodle
+  -r, --rate int          Rate limit in requests per second (0 = unlimited)
+      --url string        Moodle URL
+  -v, --verbose           Verbose output
+      --wordlist string   Path to plugins wordlist
 ```
 
 ## Security Disclaimer
