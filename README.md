@@ -13,7 +13,6 @@ probing using a configurable wordlist.
 * **High-Performance Scanning**: Built in Go using goroutines for rapid multi-threaded target analysis.
 * **Version Detection**: Accurately finger-prints core Moodle versions and deployment configurations.
 * **Component Enumeration**: Identifies active plugins, themes, and blocks to map the attack surface.
-* **Security Auditing**: Flags common security misconfigurations and exposed sensitive directories.
 
 ## Prerequisites
 
@@ -77,9 +76,6 @@ Flags:
 
 This tool is strictly intended for authorized security auditing, vulnerability assessment, and educational purposes. Do not run Evil-Moodle against targets without prior written consent. The developer assumes no liability for misuse or damage caused by this program.
 
-## License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
+# 
 
 *Developed by [@d6fault](https://github.com).*
