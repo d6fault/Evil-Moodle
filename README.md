@@ -1,6 +1,6 @@
 # Evil-Moodle: Automated Moodle LMS Security & Vulnerability Scanner
 
-https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white
+![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)
 ![MIT License](https://img.shields.io/badge/License-MIT-green.svg)
 
 **Evil-Moodle** is a fast, lightweight Moodle LMS reconnaissance and 
