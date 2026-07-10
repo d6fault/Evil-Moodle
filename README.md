@@ -42,14 +42,6 @@ Run a quick security audit against a target Moodle instance using the `scan` com
 ./evilmoodle --url https://example.com
 ```
 
-### Command-Line Options
-
-| Flag | Description | Example |
-| :--- | :--- | :--- |
-| `--url` | The target Moodle LMS URL to scan (Required) | `--url https://target.edu` |
-| `--threads` | Number of concurrent requests (Default: 10) | `--threads 20` |
-| `--output` | Save the scan results to a file | `--output report.txt` |
-
 ## Security Disclaimer
 
 This tool is strictly intended for authorized security auditing, vulnerability assessment, and educational purposes. Do not run Evil-Moodle against targets without prior written consent. The developer assumes no liability for misuse or damage caused by this program.
