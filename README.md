@@ -26,8 +26,7 @@ Clone the official repository and compile the binary locally:
 
 ```bash
 # Clone the repository
-git clone https://github.com
-
+git clone https://github.com/d6fault/Evil-Moodle.git
 # Navigate to the project directory
 cd Evil-Moodle
 
@@ -40,7 +39,7 @@ go build -o evilmoodle
 Run a quick security audit against a target Moodle instance using the `scan` command:
 
 ```bash
-./evilmoodle scan --url https://example.com
+./evilmoodle --url https://example.com
 ```
 
 ### Command-Line Options
