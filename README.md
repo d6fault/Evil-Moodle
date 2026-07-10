@@ -82,7 +82,7 @@ Track the upcoming features and development milestones for Evil-Moodle. Feel fre
 
 - [x] **Core CLI Framework**: Basic argument parsing and flag configuration.
 - [x] **Version Detection**: Reliable extraction of core Moodle versions via standard artifacts.
-- [ ] **Repository additions**: Get evilmoodle Added as a package in major Linux distro (Kali Linux, Black Arch, etc...)
+- [ ] **Repository additions**: Get evilmoodle Added as a package in major Linux distros (Kali Linux, Black Arch, etc...)
 - [ ] **CVE Matching**: Automate CVEs referencing via the Moodle version
 
 *Developed by [@d6fault](https://github.com/d6fault).*
