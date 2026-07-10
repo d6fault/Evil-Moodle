@@ -2,7 +2,6 @@ package scanner
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 )
 
@@ -12,7 +11,7 @@ func CheckSelfRegistration(url string) {
 
 	fmt.Printf("[*] Checking self-registration\n")
 
-	resp, err := http.Get(signupURL)
+	resp, err := HTTPClient.Get(signupURL)
 	if err != nil {
 		fmt.Printf("    Error: %v\n", err)
 		return

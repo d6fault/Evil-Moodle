@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"sort"
 	"strings"
 )
@@ -15,7 +14,7 @@ func CheckComposer(url string) {
 
 	fmt.Printf("[*] Checking composer.json\n")
 
-	resp, err := http.Get(composerURL)
+	resp, err := HTTPClient.Get(composerURL)
 	if err != nil {
 		fmt.Printf("    Error: %v\n", err)
 		return
@@ -29,7 +28,11 @@ func CheckComposer(url string) {
 
 	fmt.Printf("    [+] composer.json is accessible\n")
 
-	body, _ := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("    Error reading response: %v\n", err)
+		return
+	}
 
 	// Parse the JSON — we only care about require-dev
 	var composer struct {

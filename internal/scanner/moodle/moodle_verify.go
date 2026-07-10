@@ -3,14 +3,14 @@ package scanner
 import (
 	"fmt"
 	"io"
-	"net/http"
+	"os"
 	"strings"
 
 	"golang.org/x/net/html"
 )
 
-func Moodle_test(url string) {
-	resp, err := http.Get(url)
+func VerifyMoodle(url string) {
+	resp, err := HTTPClient.Get(url)
 	if err != nil {
 		fmt.Printf("Error fetching %s: %v\n", url, err)
 		return
@@ -25,7 +25,7 @@ func Moodle_test(url string) {
 
 	doc, err := html.Parse(strings.NewReader(string(body)))
 	if err != nil {
-		fmt.Printf("Error parsing HTML: %v\n", url)
+		fmt.Printf("Error parsing HTML: %v\n", err)
 		return
 	}
 
@@ -55,6 +55,7 @@ func Moodle_test(url string) {
 	if found {
 		fmt.Printf("[+] %s is running Moodle\n", url)
 	} else {
-		fmt.Printf("[-] %s is not Moodle\n", url)
+		fmt.Printf("[-] %s Seems to not be running Moodle\n", url)
+		os.Exit(1)
 	}
 }

@@ -8,18 +8,21 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
-	"time"
 )
 
 func GuestLogin(target string) {
 	target = strings.TrimRight(target, "/")
 	loginURL := target + "/login/index.php"
 
-	jar, _ := cookiejar.New(nil)
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		fmt.Printf("[-] Guest login: failed to create cookie jar: %v\n", err)
+		return
+	}
 
 	client := &http.Client{
 		Jar:     jar,
-		Timeout: 15 * time.Second,
+		Timeout: HTTPClient.Timeout,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
@@ -30,8 +33,12 @@ func GuestLogin(target string) {
 		fmt.Printf("[-] Guest login: request failed: %v\n", err)
 		return
 	}
-	body, _ := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	resp.Body.Close()
+	if err != nil {
+		fmt.Printf("[-] Guest login: failed to read response: %v\n", err)
+		return
+	}
 
 	if resp.StatusCode != 200 {
 		fmt.Printf("[-] Guest login: login page returned status %d\n", resp.StatusCode)
@@ -67,7 +74,11 @@ func GuestLogin(target string) {
 	}
 	defer resp.Body.Close()
 
-	postBody, _ := io.ReadAll(resp.Body)
+	postBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("[-] Guest login: failed to read response: %v\n", err)
+		return
+	}
 	bodyStr := string(postBody)
 	success := false
 
@@ -77,7 +88,7 @@ func GuestLogin(target string) {
 
 	if !success {
 		lowerBody := strings.ToLower(bodyStr)
-		if strings.Contains(lowerBody, "invalidlogin"); strings.Contains(lowerBody, "invalid login") {
+		if strings.Contains(lowerBody, "invalidlogin") || strings.Contains(lowerBody, "invalid login") {
 			success = false
 		}
 	}

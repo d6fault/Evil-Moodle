@@ -12,7 +12,7 @@ func CheckMoodleVersion(url string) {
 	base := strings.TrimSuffix(url, "/")
 
 	upgradeTxtURL := base + "/lib/upgrade.txt"
-	resp, err := http.Get(upgradeTxtURL)
+	resp, err := HTTPClient.Get(upgradeTxtURL)
 	if err != nil {
 		fmt.Printf("    Error: %v\n", err)
 		return
@@ -24,7 +24,12 @@ func CheckMoodleVersion(url string) {
 		return
 	}
 
-	body, _ := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("    Error reading response: %v\n", err)
+		resp.Body.Close()
+		return
+	}
 	resp.Body.Close()
 
 	if !strings.Contains(string(body), "4.5 Onwards") {
@@ -44,7 +49,7 @@ func CheckMoodleVersion(url string) {
 	upgradingMdURL := base + "/lib/UPGRADING.md"
 	fmt.Printf("[*] Checking %s\n", upgradingMdURL)
 
-	resp2, err := http.Get(upgradingMdURL)
+	resp2, err := HTTPClient.Get(upgradingMdURL)
 	if err != nil {
 		fmt.Printf("    Error: %v\n", err)
 		return
@@ -56,7 +61,11 @@ func CheckMoodleVersion(url string) {
 		return
 	}
 
-	body2, _ := io.ReadAll(resp2.Body)
+	body2, err := io.ReadAll(resp2.Body)
+	if err != nil {
+		fmt.Printf("    Error reading response: %v\n", err)
+		return
+	}
 	content := string(body2)
 
 	lines := strings.Split(content, "\n")
@@ -86,7 +95,7 @@ func GetLatestMoodleVersion() (string, error) {
 	req.Header.Set("Accept", "text/html")
 	req.Header.Set("User-Agent", "moodleprobe")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := HTTPClient.Do(req)
 	if err != nil {
 		return "", err
 	}
