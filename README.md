@@ -1,7 +1,7 @@
 # Evil-Moodle: Automated Moodle LMS Security & Vulnerability Scanner
 
 [![Go Version](https://shields.io)](https://golang.org)
-[![License](https://shields.io)](LICENSE)
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)]
 
 **Evil-Moodle** is a fast, lightweight Moodle LMS reconnaissance and 
 misconfiguration scanner written in Go. Designed for penetration 
