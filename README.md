@@ -3,7 +3,11 @@
 [![Go Version](https://shields.io)](https://golang.org)
 [![License](https://shields.io)](LICENSE)
 
-**Evil-Moodle** is a fast, lightweight, and concurrent Moodle LMS security scanner written in Go. Designed for penetration testers, security auditors, and system administrators, this CLI tool automates the discovery of misconfigurations, plugins, in the Moodle learning management systems.
+**Evil-Moodle** is a fast, lightweight Moodle LMS reconnaissance and 
+misconfiguration scanner written in Go. Designed for penetration 
+testers and security auditors, this CLI tool automates fingerprinting, 
+misconfiguration discovery, and plugin enumeration via version.php 
+probing using a configurable wordlist.
 
 ## Features
 
