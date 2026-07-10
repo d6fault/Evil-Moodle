@@ -1,5 +1,4 @@
-# Evil-Moodle: Automated Moodle LMS Security & Vulnerability Scanner
-
+# Evil-Moodle
 ![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)
 ![MIT License](https://img.shields.io/badge/MIT-green?style=for-the-badge)
 
@@ -82,5 +81,5 @@ This tool is strictly intended for authorized security auditing, vulnerability a
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
----
+
 *Developed by [@d6fault](https://github.com).*
