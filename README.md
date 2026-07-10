@@ -76,6 +76,13 @@ Flags:
 
 This tool is strictly intended for authorized security auditing, vulnerability assessment, and educational purposes. Do not run Evil-Moodle against targets without prior written consent. The developer assumes no liability for misuse or damage caused by this program.
 
-# 
+## Roadmap
 
-*Developed by [@d6fault](https://github.com).*
+Track the upcoming features and development milestones for Evil-Moodle. Feel free to open an issue to suggest new capabilities.
+
+- [x] **Core CLI Framework**: Basic argument parsing and flag configuration.
+- [x] **Version Detection**: Reliable extraction of core Moodle versions via standard artifacts.
+- [ ] **Repository additions**: Get evilmoodle Added as a package in major Linux distro (Kali Linux, Black Arch, etc...)
+- [ ] **CVE Matching**: Automate CVEs referencing via the Moodle version
+
+*Developed by [@d6fault](https://github.com/d6fault).*
