@@ -20,12 +20,19 @@ func GuestLogin(target string) {
 		return
 	}
 
+	// Follow redirects for this client so we can inspect the page we
+	// actually land on. Moodle redirects the login POST on both success
+	// and failure, so the status code alone cannot distinguish them.
 	client := &http.Client{
 		Jar:     jar,
 		Timeout: HTTPClient.Timeout,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
+			if len(via) >= 10 {
+				return http.ErrUseLastResponse
+			}
+			return nil
 		},
+		Transport: HTTPClient.Transport,
 	}
 	fmt.Printf("[*] Checking Guest login\n")
 	resp, err := client.Get(loginURL)
@@ -79,23 +86,27 @@ func GuestLogin(target string) {
 		fmt.Printf("[-] Guest login: failed to read response: %v\n", err)
 		return
 	}
-	bodyStr := string(postBody)
-	success := false
+	lowerBody := strings.ToLower(string(postBody))
 
-	if resp.StatusCode == 303 || resp.StatusCode == 302 || resp.StatusCode == 301 {
-		success = true
+	// A failed attempt re-renders the login form with an error and/or a
+	// fresh logintoken. A successful attempt lands on a page carrying the
+	// logged-in user menu instead.
+	if strings.Contains(lowerBody, "invalidlogin") ||
+		strings.Contains(lowerBody, "invalid login") ||
+		strings.Contains(lowerBody, "loginerrormessage") ||
+		strings.Contains(lowerBody, `name="logintoken"`) {
+		fmt.Printf("    [-] Guest login failed\n")
+		return
 	}
 
-	if !success {
-		lowerBody := strings.ToLower(bodyStr)
-		if strings.Contains(lowerBody, "invalidlogin") || strings.Contains(lowerBody, "invalid login") {
-			success = false
-		}
-	}
+	loggedIn := strings.Contains(lowerBody, "usermenu") ||
+		strings.Contains(lowerBody, `href="/login/logout.php`) ||
+		strings.Contains(lowerBody, `href="`+target+`"`) &&
+			strings.Contains(lowerBody, "logout")
 
-	if success {
+	if loggedIn {
 		fmt.Printf("    [*] Guest login SUCCEEDED - guest:guest\n")
 	} else {
-		fmt.Printf("    [-] Guest login failed\n")
+		fmt.Printf("    [?] Guest login result inconclusive (status %d)\n", resp.StatusCode)
 	}
 }

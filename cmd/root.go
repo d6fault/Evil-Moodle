@@ -16,6 +16,7 @@ var wordlist string
 var verbose bool
 var rateLimit int
 var delay int
+var insecure bool
 
 func scheme(rawURL string) string {
 	if !strings.HasPrefix(rawURL, "http://") && !strings.HasPrefix(rawURL, "https://") {
@@ -38,24 +39,23 @@ Usage:
 Examples:
   evilmoodle --url https://moodle.example.com
   evilmoodle --url moodle.example.com --wordlist plugins.txt -v
-  evilmoodle --url https://example.com --wordlist plugins.txt --rate 10 --delay 100
-
-Flags:
-      --url string        Moodle URL (required)
-      --wordlist string   Path to plugins wordlist
-  -v, --verbose           Verbose output
-  -r, --rate int          Rate limit in requests per second (0 = unlimited)
-  -d, --delay int         Delay between requests in milliseconds (default 0)`,
+  evilmoodle --url https://example.com --wordlist plugins.txt --rate 10 --delay 100`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ui.PrintBanner()
 		if url == "" {
 			fmt.Println("Please Enter a url. With --url")
 			os.Exit(1)
 		}
+		if insecure {
+			scanner.SetInsecureTLS()
+			fmt.Println("[!] TLS certificate verification disabled")
+		}
 		fmt.Println("Scanning", url)
 		url = scheme(url)
 
-		scanner.VerifyMoodle(url)
+		if !scanner.VerifyMoodle(url) {
+			return
+		}
 		scanner.CheckMoodleVersion(url)
 		scanner.CheckDebugMode(url)
 		scanner.CheckSelfRegistration(url)
@@ -80,6 +80,7 @@ func init() {
 	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Verbose output")
 	rootCmd.Flags().IntVarP(&rateLimit, "rate", "r", 0, "Rate limit in requests per second (0 = unlimited)")
 	rootCmd.Flags().IntVarP(&delay, "delay", "d", 0, "Delay between requests in milliseconds")
+	rootCmd.Flags().BoolVar(&insecure, "insecure", false, "Skip TLS certificate verification")
 }
 
 func Execute() {

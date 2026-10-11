@@ -10,7 +10,7 @@ probing using a configurable wordlist.
 
 ## Features
 
-* **High-Performance Scanning**: Built in Go using goroutines for rapid multi-threaded target analysis.
+* **Fast Scanning**: Built in Go, with an optional rate limit and inter-request delay for polite scanning.
 * **Version Detection**: Accurately finger-prints core Moodle versions and deployment configurations.
 * **Component Enumeration**: Identifies active plugins, themes, and blocks to map the attack surface.
 
@@ -59,22 +59,16 @@ Examples:
 
 Flags:
       --url string        Moodle URL (required)
-      --wordlist string   Path to plugins wordlist
+      --wordlist string   Path to plugins wordlist (enables plugin enumeration)
   -v, --verbose           Verbose output
   -r, --rate int          Rate limit in requests per second (0 = unlimited)
   -d, --delay int         Delay between requests in milliseconds (default 0)
-
-Usage:
-  evilmoodle [flags]
-
-Flags:
-  -d, --delay int         Delay between requests in milliseconds
-  -h, --help              help for evilmoodle
-  -r, --rate int          Rate limit in requests per second (0 = unlimited)
-      --url string        Moodle URL
-  -v, --verbose           Verbose output
-      --wordlist string   Path to plugins wordlist
+      --insecure          Skip TLS certificate verification
 ```
+
+Plugin enumeration only runs when `--wordlist` is supplied. Against a
+protected target, a valid TLS certificate is required by default; pass
+`--insecure` to scan hosts with self-signed or otherwise invalid certificates.
 
 ## Security Disclaimer
 

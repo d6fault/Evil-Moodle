@@ -3,6 +3,7 @@ package scanner
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -50,6 +51,9 @@ func ProbePlugins(baseURL string, wordlistPath string, verbose bool, rateLimit i
 	var limiter <-chan time.Time
 	if rateLimit > 0 {
 		interval := time.Second / time.Duration(rateLimit)
+		if interval <= 0 {
+			interval = time.Nanosecond
+		}
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 		limiter = ticker.C
@@ -78,11 +82,15 @@ func ProbePlugins(baseURL string, wordlistPath string, verbose bool, rateLimit i
 
 		switch resp.StatusCode {
 		case 200:
-			buf := make([]byte, 1024)
-			n, _ := resp.Body.Read(buf)
-			body := string(buf[:n])
+			// version.php is a short PHP file; read the head of the body
+			// fully rather than a single Read, which may return a partial
+			// buffer and misclassify an HTML redirect page as a plugin.
+			buf, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
+			head := strings.ToLower(string(buf))
+			body := strings.ToLower(strings.TrimSpace(string(buf)))
 
-			if !strings.Contains(body, "<html") && !strings.Contains(body, "<!DOCTYPE") {
+			if !strings.Contains(body, "<html") && !strings.Contains(body, "<!doctype") &&
+				!strings.Contains(head, "<head") && !strings.Contains(head, "<body") {
 				found = append(found, FoundPlugin{
 					Path:       path,
 					StatusCode: resp.StatusCode,

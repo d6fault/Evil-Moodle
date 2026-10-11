@@ -5,84 +5,90 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 )
+
+// looksLikeHTML reports whether a fetched body is an HTML document rather
+// than the raw version artifact we asked for. A 404 or error page served
+// with a 200 still contains version-like numbers, so we must reject it
+// before parsing to avoid reporting a bogus version.
+func looksLikeHTML(body string) bool {
+	head := strings.ToLower(body)
+	if i := strings.Index(head, "<"); i >= 0 {
+		head = head[i:]
+	}
+	return strings.Contains(head, "<!doctype") ||
+		strings.Contains(head, "<html") ||
+		strings.Contains(head, "<head") ||
+		strings.Contains(head, "<body")
+}
+
+// versionFromBody extracts a Moodle version string from the content of a
+// version artifact. UPGRADING.md uses "## X.Y" branch headers; version.php
+// carries a $release/$version assignment. We anchor on those markers rather
+// than the first dotted number in the file, which otherwise picks up dates,
+// tracker IDs and dependency versions.
+func versionFromBody(content string) (string, bool) {
+	// UPGRADING.md: the first "## X.Y" heading is the current branch.
+	headingRe := regexp.MustCompile(`(?m)^##\s+(\d+\.\d+(?:\.\d+)?)\s*$`)
+	if m := headingRe.FindStringSubmatch(content); m != nil {
+		return m[1], true
+	}
+
+	// version.php: $release = '5.3.0'; (three-part) or $version = 2026100300
+	releaseRe := regexp.MustCompile(`(?i)\$release\s*=\s*['"](\d+\.\d+(?:\.\d+)?)['"]`)
+	if m := releaseRe.FindStringSubmatch(content); m != nil {
+		return m[1], true
+	}
+
+	// version.php also exposes $branch = '503' when release is absent.
+	branchRe := regexp.MustCompile(`(?i)\$branch\s*=\s*['"](\d{2,3})['"]`)
+	if m := branchRe.FindStringSubmatch(content); m != nil {
+		b := m[1]
+		if len(b) >= 2 {
+			return b[:len(b)-1] + "." + b[len(b)-1:], true
+		}
+	}
+
+	return "", false
+}
 
 func CheckMoodleVersion(url string) {
 	base := strings.TrimSuffix(url, "/")
 
-	upgradeTxtURL := base + "/lib/upgrade.txt"
-	resp, err := HTTPClient.Get(upgradeTxtURL)
-	if err != nil {
-		fmt.Printf("    Error: %v\n", err)
-		return
-	}
-
-	if resp.StatusCode != 200 {
-		fmt.Printf("    Status: %d — file not found\n", resp.StatusCode)
-		resp.Body.Close()
-		return
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Printf("    Error reading response: %v\n", err)
-		resp.Body.Close()
-		return
-	}
-	resp.Body.Close()
-
-	if !strings.Contains(string(body), "4.5 Onwards") {
-		lines := strings.Split(string(body), "\n")
-		versionRegex := regexp.MustCompile(`(\d+\.\d+(?:\.\d+)?)`)
-		for _, line := range lines {
-			if match := versionRegex.FindStringSubmatch(line); match != nil {
-				fmt.Printf("    [+] Version: %s\n", match[1])
-				PrintVersionStatus(match[1])
-				return
-			}
+	// /version.php is the canonical artifact but normally executes to an
+	// empty body; /lib/UPGRADING.md is readable only on some installs.
+	for _, path := range []string{"/lib/UPGRADING.md", "/version.php", "/lib/upgrade.txt"} {
+		artifactURL := base + path
+		resp, err := HTTPClient.Get(artifactURL)
+		if err != nil {
+			fmt.Printf("    Error: %v\n", err)
+			continue
 		}
-		fmt.Printf("    [-] Could not find version\n")
-		return
-	}
-
-	upgradingMdURL := base + "/lib/UPGRADING.md"
-	fmt.Printf("[*] Checking %s\n", upgradingMdURL)
-
-	resp2, err := HTTPClient.Get(upgradingMdURL)
-	if err != nil {
-		fmt.Printf("    Error: %v\n", err)
-		return
-	}
-	defer resp2.Body.Close()
-
-	if resp2.StatusCode != 200 {
-		fmt.Printf("    Status: %d — UPGRADING.md not found\n", resp2.StatusCode)
-		return
-	}
-
-	body2, err := io.ReadAll(resp2.Body)
-	if err != nil {
-		fmt.Printf("    Error reading response: %v\n", err)
-		return
-	}
-	content := string(body2)
-
-	lines := strings.Split(content, "\n")
-	versionRegex := regexp.MustCompile(`(\d+\.\d+(?:\.\d+)?)`)
-
-	for i, line := range lines {
-		if i >= 5 {
-			break
+		if resp.StatusCode != 200 {
+			resp.Body.Close()
+			continue
 		}
-		if match := versionRegex.FindStringSubmatch(line); match != nil {
-			fmt.Printf("    [+] Version: %s\n", match[1])
-			PrintVersionStatus(match[1])
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			fmt.Printf("    Error reading response: %v\n", err)
+			continue
+		}
+
+		content := string(body)
+		if looksLikeHTML(content) {
+			continue
+		}
+		if version, ok := versionFromBody(content); ok {
+			fmt.Printf("    [+] Version: %s (via %s)\n", version, path)
+			PrintVersionStatus(version)
 			return
 		}
 	}
 
-	fmt.Printf("    [-] Could not find version\n")
+	fmt.Printf("    [-] Could not find version (version artifacts are not web-readable)\n")
 }
 
 func GetLatestMoodleVersion() (string, error) {
@@ -119,20 +125,18 @@ func GetLatestMoodleVersion() (string, error) {
 		return "", fmt.Errorf("no version tags found on page")
 	}
 
+	// The releases page lists several branches; the newest stable is not
+	// necessarily first, so take the maximum version rather than the first
+	// tag that happens to lack a "+" suffix.
+	latest := ""
 	for _, m := range matches {
-		version := m[1]    // e.g. "5.2.1"
-		plusSuffix := m[2] // e.g. "+" or ""
-
-		if plusSuffix != "+" {
-			return version, nil
+		version := normalizeVersion(m[1])
+		if latest == "" || compareVersions(version, latest) > 0 {
+			latest = version
 		}
 	}
 
-	if len(matches) > 0 {
-		return strings.TrimSuffix(matches[0][1], "+"), nil
-	}
-
-	return "", fmt.Errorf("could not parse version from page")
+	return latest, nil
 }
 
 func normalizeVersion(v string) string {
@@ -141,6 +145,21 @@ func normalizeVersion(v string) string {
 		parts = append(parts, "0")
 	}
 	return strings.Join(parts, ".")
+}
+
+// numericPrefix returns the leading integer of a version segment. Segments
+// such as "0rc1" or "1beta" are treated as their numeric part so that
+// pre-release tags comparing equal to the release they precede sort no higher.
+func numericPrefix(seg string) int {
+	end := 0
+	for end < len(seg) && seg[end] >= '0' && seg[end] <= '9' {
+		end++
+	}
+	if end == 0 {
+		return 0
+	}
+	n, _ := strconv.Atoi(seg[:end])
+	return n
 }
 
 func compareVersions(a, b string) int {
@@ -155,10 +174,10 @@ func compareVersions(a, b string) int {
 	for i := 0; i < maxLen; i++ {
 		var an, bn int
 		if i < len(aParts) {
-			fmt.Sscanf(aParts[i], "%d", &an)
+			an = numericPrefix(aParts[i])
 		}
 		if i < len(bParts) {
-			fmt.Sscanf(bParts[i], "%d", &bn)
+			bn = numericPrefix(bParts[i])
 		}
 		if an != bn {
 			return an - bn
